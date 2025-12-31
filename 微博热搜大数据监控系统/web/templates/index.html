@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>大数据实时热点监控系统 - 词云版</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts-wordcloud@2.1.0/dist/echarts-wordcloud.min.js"></script>
+  <style>
+    :root { --primary: #1677ff; --bg: #f0f2f5; --card: #ffffff; }
+    body { font-family: "PingFang SC","Microsoft YaHei",sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 1400px; margin: 0 auto; }
+
+    .header {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { margin: 0; font-size: 24px; color: #1a1a1a; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 0.7fr;
+      gap: 20px;
+    }
+
+    .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-height: 500px; }
+    .chart-box { width: 100%; height: 450px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px 8px; color: #888; border-bottom: 2px solid #f0f0f0; }
+    td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+
+    .rank-tag { display: inline-block; width: 22px; height: 22px; line-height: 22px; text-align: center; border-radius: 4px; background: #eee; font-size: 11px; }
+    tr:nth-child(1) .rank-tag { background: #ff4d4f; color: #fff; }
+    tr:nth-child(2) .rank-tag { background: #ff7a45; color: #fff; }
+    tr:nth-child(3) .rank-tag { background: #ffc53d; color: #fff; }
+
+    .btn { padding: 10px 20px; border: 0; border-radius: 8px; cursor: pointer; background: var(--primary); color: #fff; font-weight: bold; }
+    .btn:hover { background: #40a9ff; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+    
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.8); display: none;
+      justify-content: center; align-items: center; z-index: 1000;
+    }
+    .loading-overlay.active { display: flex; }
+    .loading-spinner {
+      width: 50px; height: 50px; border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .status-toast {
+      position: fixed; bottom: 20px; right: 20px; padding: 15px 25px;
+      border-radius: 8px; color: #fff; font-weight: 500; display: none;
+      z-index: 1001; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .status-toast.success { background: #52c41a; display: block; }
+    .status-toast.error { background: #ff4d4f; display: block; }
+    .status-toast.loading { background: #1890ff; display: block; }
+    
+    .stats-bar {
+      display: flex; gap: 20px; margin-top: 10px; font-size: 13px; color: #666;
+    }
+    .stat-item {
+      display: flex; align-items: center; gap: 5px;
+    }
+    .stat-value { color: var(--primary); font-weight: bold; }
+    .trend-arrow { font-weight: bold; font-size: 16px; }
+    .trend-arrow.up { color: #52c41a; }
+    .trend-arrow.down { color: #ff4d4f; }
+    .trend-arrow.same { color: #faad14; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>微博热搜大数据监控看板</h1>
+        <div style="margin-top:5px; color:#888; font-size:13px;">数据源：微博实时热搜 | 计算层：Hadoop MapReduce分布式集群</div>
+      </div>
+      <div style="text-align: right;">
+        <button id="btn" class="btn">实时更新</button>
+        <div style="margin-top:8px;">
+          <a href="/cloud_features" style="color: #1890ff; text-decoration: none; font-size:12px; margin-right: 20px;">云计算特性说明</a>
+          <span id="status" style="font-size:12px; color:#999;"></span>
+        </div>
+        <div class="stats-bar">
+          <div class="stat-item">热度词数：<span id="total-words" class="stat-value">-</span></div>
+          <div class="stat-item">总热度值：<span id="total-score" class="stat-value">-</span></div>
+          <div class="stat-item">更新时间：<span id="update-time" class="stat-value">-</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-overlay" id="loading">
+      <div style="text-align: center;">
+        <div class="loading-spinner"></div>
+        <div style="margin-top: 15px; color: #666; font-weight: 500;">正在处理数据...</div>
+        <div id="loading-detail" style="margin-top: 8px; color: #999; font-size: 12px;"></div>
+      </div>
+    </div>
+    
+    <div id="toast" class="status-toast"></div>
+
+    <div class="main-grid">
+      <div class="card">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #722ed1; padding-left:10px;">热点词云可视化</div>
+        <div id="wordcloud-container" class="chart-box"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #1890ff; padding-left:10px;">频次统计分布</div>
+        <div id="bar-container" class="chart-box"></div>
+      </div>
+
+      <div class="card" style="min-height: auto;">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #52c41a; padding-left:10px;">TOP 20 榜单</div>
+        <table>
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>关键词</th>
+              <th>频次</th>
+              <th>趋势</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            {% for row in top20 %}
+            <tr>
+              <td><span class="rank-tag">{{ loop.index }}</span></td>
+              <td>{{ row.word }}</td>
+              <td style="color:var(--primary); font-weight:bold;">{{ row.count }}</td>
+              <td><span class="trend-arrow">→</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="main-grid" style="margin-top: 20px;">
+      <div class="card">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #f5222d; padding-left:10px;">热点分类统计</div>
+        <div id="category-pie" class="chart-box"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #13c2c2; padding-left:10px;">热搜词趋势分析</div>
+        <div id="trend-chart" class="chart-box"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:bold; margin-bottom:15px; border-left:4px solid #faad14; padding-left:10px;">实时数据概览</div>
+        <div id="stats-overview" style="font-size: 14px; line-height: 1.8;">
+          <div style="margin-bottom: 15px;">
+            <div style="color: #666;">总热度值</div>
+            <div style="font-size: 28px; font-weight: bold; color: #f5222d;">{{ total_heat }}</div>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <div style="color: #666;">热搜词数量</div>
+            <div style="font-size: 28px; font-weight: bold; color: #1890ff;">{{ top20|length }}</div>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <div style="color: #666;">主要分类占比</div>
+            <div id="category-list" style="margin-top: 10px;">
+              {% for category, count in categories.items() %}
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: #666;">{{ category }}</span>
+                <span style="font-weight: bold;">{{ count }}个</span>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const barChart = echarts.init(document.getElementById('bar-container'));
+    const wordChart = echarts.init(document.getElementById('wordcloud-container'));
+    const pieChart = echarts.init(document.getElementById('category-pie'));
+    const trendChart = echarts.init(document.getElementById('trend-chart'));
+    
+    const PROCESS_STEPS = [
+      { name: '抓取热搜数据', duration: 3000 },
+      { name: '中文分词处理', duration: 2000 },
+      { name: '上传至HDFS', duration: 3000 },
+      { name: 'Hadoop计算', duration: 5000 },
+      { name: '获取结果', duration: 2000 }
+    ];
+    
+    // 存储趋势数据
+    let trendData = {
+      time: [],
+      hotWords: [],
+      totalHeat: [],
+      isMock: []
+    };
+    
+    // 存储数据说明信息
+    let trendInfo = '';
+    
+    // 初始分类数据
+    const initialCategories = {{ categories|tojson }};
+    
+    // 保存上次的数据，用于计算趋势
+    let previousData = new Map();
+    let previousRanks = new Map();
+    
+    // 第一次渲染时不比较，后续刷新时再比较
+    let isFirstRender = true;
+
+    function showToast(message, type = 'loading') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'status-toast ' + type;
+      if (type !== 'loading') {
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      }
+    }
+
+    function setLoading(loading, detail = '') {
+      const overlay = document.getElementById('loading');
+      const btn = document.getElementById('btn');
+      const detailEl = document.getElementById('loading-detail');
+      
+      if (loading) {
+        overlay.classList.add('active');
+        btn.disabled = true;
+        if (detail) detailEl.textContent = detail;
+      } else {
+        overlay.classList.remove('active');
+        btn.disabled = false;
+      }
+    }
+
+    function updateStats(data) {
+      const totalWords = data.length;
+      const totalScore = data.reduce((sum, item) => sum + item.count, 0);
+      document.getElementById('total-words').textContent = totalWords;
+      document.getElementById('total-score').textContent = totalScore.toLocaleString();
+    }
+
+    function updateCategoryChart(categories) {
+      const pieData = Object.entries(categories).map(([name, value]) => ({
+        name: name,
+        value: value
+      }));
+      
+      const colors = ['#ff4d4f', '#ff7a45', '#ffc53d', '#a0d911', '#40a9ff', '#1890ff', '#722ed1', '#eb2f96'];
+      
+      pieChart.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} 个 ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          right: 10,
+          top: 'center',
+          textStyle: { fontSize: 12 }
+        },
+        color: colors,
+        series: [{
+          name: '分类统计',
+          type: 'pie',
+          radius: ['40%', '70%'],
+          center: ['40%', '50%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: '#fff',
+            borderWidth: 2
+          },
+          label: {
+            show: true,
+            formatter: '{b}: {c}个'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 14,
+              fontWeight: 'bold'
+            }
+          },
+          labelLine: {
+            show: true
+          },
+          data: pieData
+        }]
+      });
+    }
+
+    // 从API获取实时趋势数据
+    async function fetchRealTimeTrend() {
+      try {
+        const res = await fetch('/api/trend/realtime');
+        const data = await res.json();
+        if (data.ok && data.data) {
+          trendData = data.data;
+          trendInfo = data.info || '';
+          updateTrendChart();
+        }
+      } catch (error) {
+        console.error('获取实时趋势数据失败:', error);
+      }
+    }
+
+    function updateTrendChart() {
+      // 准备数据，区分真实数据和模拟数据
+      const hotWordsData = [];
+      const totalHeatData = [];
+      
+      for (let i = 0; i < trendData.time.length; i++) {
+        // 为热搜词数量数据添加样式
+        hotWordsData.push({
+          value: trendData.hotWords[i],
+          itemStyle: {
+            color: trendData.isMock[i] ? '#b3d8ff' : '#1890ff' // 模拟数据浅蓝色，真实数据深蓝色
+          },
+          lineStyle: {
+            type: trendData.isMock[i] ? 'dashed' : 'solid' // 模拟数据虚线，真实数据实线
+          }
+        });
+        
+        // 为总热度数据添加样式
+        totalHeatData.push({
+          value: trendData.totalHeat[i],
+          itemStyle: {
+            color: trendData.isMock[i] ? '#ffcccc' : '#ff4d4f' // 模拟数据浅红色，真实数据深红色
+          },
+          lineStyle: {
+            type: trendData.isMock[i] ? 'dashed' : 'solid' // 模拟数据虚线，真实数据实线
+          }
+        });
+      }
+
+      trendChart.setOption({
+        title: {
+          text: trendInfo ? trendInfo : '热搜词趋势分析',
+          textStyle: {
+            fontSize: 14,
+            color: '#666'
+          },
+          left: 'center',
+          top: 10
+        },
+        tooltip: {
+          trigger: 'axis',
+          formatter: function(params) {
+            let result = `${params[0].axisValue}<br/>`;
+            params.forEach(item => {
+              const dataType = trendData.isMock[params[0].dataIndex] ? '（模拟数据）' : '（真实数据）';
+              result += `${item.marker} ${item.seriesName}: ${item.value} ${dataType}<br/>`;
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: ['热搜词数量', '总热度'],
+          top: 35
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+          top: 80
+        },
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: trendData.time
+        },
+        yAxis: [
+          {
+            type: 'value',
+            name: '热搜词数量',
+            position: 'left',
+            axisLabel: {
+              formatter: '{value}'
+            }
+          },
+          {
+            type: 'value',
+            name: '总热度',
+            position: 'right',
+            axisLabel: {
+              formatter: '{value}'
+            }
+          }
+        ],
+        series: [
+          {
+            name: '热搜词数量',
+            type: 'line',
+            data: hotWordsData,
+            smooth: true,
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
+                { offset: 1, color: 'rgba(24, 144, 255, 0.05)' }
+              ])
+            }
+          },
+          {
+            name: '总热度',
+            type: 'line',
+            yAxisIndex: 1,
+            data: totalHeatData,
+            smooth: true,
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(255, 77, 79, 0.3)' },
+                { offset: 1, color: 'rgba(255, 77, 79, 0.05)' }
+              ])
+            }
+          }
+        ]
+      });
+    }
+
+    function updateVisuals(data) {
+      const barData = [...data].sort((a, b) => a.count - b.count);
+      
+      const colors = ['#ff4d4f', '#ff7a45', '#ffc53d', '#ffc107', '#a0d911', '#40a9ff', '#1890ff', '#722ed1'];
+
+      barChart.setOption({
+        tooltip: { 
+          trigger: 'axis',
+          formatter: '{b}: {c} 次'
+        },
+        grid: { left: '3%', right: '10%', bottom: '3%', containLabel: true },
+        xAxis: { 
+          type: 'value',
+          axisLabel: { formatter: v => v >= 1000 ? (v/1000).toFixed(0) + 'k' : v }
+        },
+        yAxis: { 
+          type: 'category',
+          data: barData.map(d => d.word),
+          axisLabel: { interval: 0, fontSize: 11, width: 80, overflow: 'truncate' }
+        },
+        series: [{
+          name: '出现频次',
+          type: 'bar',
+          data: barData.map((d, i) => ({
+            value: d.count,
+            itemStyle: { color: colors[i % colors.length], borderRadius: [0, 4, 4, 0] }
+          })),
+          barWidth: '60%'
+        }]
+      });
+
+      wordChart.setOption({
+        tooltip: { 
+          formatter: function(params) {
+            return `${params.name}<br/>频次：${params.value}`;
+          }
+        },
+        series: [{
+          type: 'wordCloud',
+          shape: 'circle',
+          left: 'center', top: 'center', width: '90%', height: '90%',
+          sizeRange: [14, 48],
+          rotationRange: [-45, 90],
+          rotationStep: 45,
+          gridSize: 10,
+          drawOutOfBound: false,
+          layoutAnimation: true,
+          textStyle: {
+            fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+            fontWeight: 'bold',
+            color: function () {
+              const hue = Math.floor(Math.random() * 60) + 200;
+              return `hsl(${hue}, 70%, 50%)`;
+            }
+          },
+          emphasis: { 
+            focus: 'self', 
+            textStyle: { 
+              textShadowBlur: 10, 
+              textShadowColor: '#333' 
+            } 
+          },
+          data: data.map(d => ({ 
+            name: d.word, 
+            value: d.count,
+            rotation: Math.floor(Math.random() * 2) * 90
+          }))
+        }]
+      });
+    }
+
+    function renderTable(rows) {
+      const currentData = new Map();
+      const currentRanks = new Map();
+      
+      // 计算每个词的趋势
+      const tableRows = rows.map((r, i) => {
+        const currentRank = i + 1;
+        currentData.set(r.word, r.count);
+        currentRanks.set(r.word, currentRank);
+        
+        // 计算趋势
+        let trend = 'same';
+        let arrow = '→';
+        
+        // 不是第一次渲染时，计算趋势
+        if (!isFirstRender) {
+          if (previousRanks.has(r.word)) {
+            const prevRank = previousRanks.get(r.word);
+            if (currentRank < prevRank) {
+              // 排名上升
+              trend = 'up';
+              arrow = '↑';
+            } else if (currentRank > prevRank) {
+              // 排名下降
+              trend = 'down';
+              arrow = '↓';
+            }
+            // 排名不变保持→
+          } else {
+            // 新上榜
+            trend = 'up';
+            arrow = '↑';
+          }
+        }
+        
+        return `
+          <tr>
+            <td><span class="rank-tag">${currentRank}</span></td>
+            <td>${r.word}</td>
+            <td style="color:var(--primary);font-weight:bold">${r.count}</td>
+            <td><span class="trend-arrow ${trend}">${arrow}</span></td>
+          </tr>
+        `;
+      }).join('');
+      
+      document.getElementById('tbody').innerHTML = tableRows;
+      
+      // 更新上次数据
+      previousData = currentData;
+      previousRanks = currentRanks;
+      
+      // 标记第一次渲染已完成
+      if (isFirstRender) {
+        isFirstRender = false;
+      }
+    }
+
+    document.getElementById('btn').addEventListener('click', async () => {
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+      
+      try {
+        setLoading(true, '正在启动数据同步...');
+        showToast('开始抓取微博热搜...', 'loading');
+        
+        const startTime = Date.now();
+        const res = await fetch('/api/refresh', { method: 'POST' });
+        const data = await res.json();
+        
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        
+        if (!res.ok || !data.ok) {
+          const detail = String(data.detail || '');
+          console.error('FULL DETAIL:\n' + detail);
+          showToast(`刷新失败：${data.msg || '未知错误'}`, 'error');
+          setLoading(false);
+          return;
+        }
+
+        renderTable(data.top20);
+        updateVisuals(data.top20);
+        updateStats(data.top20);
+        
+        // 更新分类图表
+        if (data.summary && data.summary.categories) {
+          updateCategoryChart(data.summary.categories);
+        }
+        
+        // 更新趋势图表
+        fetchRealTimeTrend();
+        
+        document.getElementById('update-time').textContent = data.updated_at || '-';
+        document.getElementById('status').textContent = `计算完成！耗时 ${elapsed}秒`;
+        
+        showToast(`刷新成功！耗时 ${elapsed}秒`, 'success');
+        
+      } catch (e) {
+        console.error(e);
+        showToast(`请求异常：${e.message}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    const initialData = {{ top20|tojson }};
+    if (initialData && initialData.length > 0) {
+      updateVisuals(initialData);
+      renderTable(initialData);
+      updateStats(initialData);
+    }
+    
+    // 初始设置更新时间
+    document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+    
+    // 初始化分类图表
+    updateCategoryChart(initialCategories);
+    
+    // 初始化趋势图表，获取真实数据
+    fetchRealTimeTrend();
+    updateTrendChart();
+
+    window.onresize = () => {
+      barChart.resize();
+      wordChart.resize();
+      pieChart.resize();
+      trendChart.resize();
+    };
+    
+    
+    
+    // 定期自动刷新（每10分钟）
+    setInterval(() => {
+      document.getElementById('btn').click();
+    }, 10 * 60 * 1000);
+  </script>
+</body>
+</html>

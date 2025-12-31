@@ -1,0 +1,118 @@
+# 微博热搜大数据监控系统 - 代码提交目录清单
+
+## 核心目录结构
+
+```
+docker-hadoop-master/
+├── web/                 # Web应用（必须）
+│   ├── app.py           # Flask主应用
+│   ├── templates/       # HTML模板
+│   │   ├── index.html   # 首页
+│   │   ├── history.html # 历史数据页
+│   │   └── cloud_features.html  # 云特性说明
+│   └── static/          # 静态资源（如存在）
+├── fetch_hot.py         # 微博热搜数据采集（必须）
+├── segment.py           # 中文分词处理（必须）
+├── mapper.py            # MapReduce映射器（必须）
+├── reducer.py           # MapReduce归约器（必须）
+├── cooccurrence_mapper.py    # 共现关系映射器（必须）
+├── cooccurrence_reducer.py   # 共现关系归约器（必须）
+├── time_dist_mapper.py       # 时段分布映射器（必须）
+├── time_dist_reducer.py      # 时段分布归约器（必须）
+├── docker-compose.yml        # Docker集群配置（必须）
+├── docker-compose-v3.yml     # Docker集群配置（必须）
+├── hadoop.env                # Hadoop环境变量（必须）
+├── stopwords.txt             # 停用词表（必须）
+├── user_dict.txt             # 自定义词典（必须）
+└── README.md                 # 项目说明文档（必须）
+```
+
+## 必须包含的文件说明
+
+### 1. Web应用核心文件
+- **web/app.py**：Flask Web应用主程序，实现API和页面路由
+- **web/templates/**：HTML模板文件，实现数据可视化界面
+
+### 2. 数据处理核心文件
+- **fetch_hot.py**：微博热搜数据采集脚本
+- **segment.py**：中文文本分词处理
+- **mapper.py/reducer.py**：热搜词统计MapReduce作业
+- **cooccurrence_mapper.py/cooccurrence_reducer.py**：共现关系计算MapReduce作业
+- **time_dist_mapper.py/time_dist_reducer.py**：时段分布统计MapReduce作业
+
+### 3. 容器化部署文件
+- **docker-compose.yml**：Docker Compose配置，定义Hadoop集群组件
+- **docker-compose-v3.yml**：Docker Compose v3版本配置
+- **hadoop.env**：Hadoop环境变量配置
+
+### 4. 配置和辅助文件
+- **stopwords.txt**：中文停用词表，用于文本过滤
+- **user_dict.txt**：自定义词典，用于优化中文分词
+- **README.md**：项目说明文档，包含部署和使用指南
+
+## 可以排除的文件
+
+以下文件为运行时生成或配置文件，无需提交：
+
+```
+.venv/                   # Python虚拟环境
+.idea/                   # IDE配置文件
+__pycache__/             # Python编译缓存
+history/                 # 历史数据
+news_raw.txt             # 运行时生成的原始数据
+news_seg.txt             # 运行时生成的分词结果
+top20.txt                # 运行时生成的统计结果
+cooccurrence.txt         # 运行时生成的共现关系
+time_dist.txt            # 运行时生成的时段分布
+last_refresh.log         # 运行日志
+Makefile                 # 构建脚本（如无特殊需要）
+test.txt                 # 测试文件
+```
+
+## 提交注意事项
+
+1. **保持目录结构清晰**：严格按照上述目录结构组织文件
+2. **确保可部署性**：docker-compose.yml等配置文件必须完整
+3. **包含必要文档**：README.md必须包含部署和使用说明
+4. **排除临时文件**：避免提交运行时生成的文件和缓存
+5. **版本一致性**：确保各组件版本兼容
+
+## 部署验证步骤
+
+提交后可通过以下步骤验证部署：
+
+```bash
+# 1. 启动Hadoop集群
+docker-compose up -d
+
+# 2. 启动Web应用
+cd web
+python app.py
+
+# 3. 访问应用
+http://localhost:5000
+```
+
+## 功能验证清单
+
+- [ ] 微博热搜数据采集正常
+- [ ] 中文分词处理正常
+- [ ] MapReduce作业执行正常
+- [ ] Web应用启动正常
+- [ ] 数据可视化展示正常
+- [ ] 历史数据查询功能正常
+- [ ] 数据刷新功能正常
+
+# 提交文件总览
+
+| 类别 | 文件/目录 | 必要性 | 说明 |
+|------|-----------|--------|------|
+| **Web应用** | web/ | 必须 | Flask Web应用和模板 |
+| **数据采集** | fetch_hot.py | 必须 | 微博热搜数据采集 |
+| **中文处理** | segment.py | 必须 | 中文分词处理 |
+| **MapReduce作业** | mapper.py, reducer.py | 必须 | 热搜词统计 |
+| **共现关系计算** | cooccurrence_mapper.py, cooccurrence_reducer.py | 必须 | 共现关系分析 |
+| **时段分布统计** | time_dist_mapper.py, time_dist_reducer.py | 必须 | 时段趋势分析 |
+| **容器化部署** | docker-compose.yml, hadoop.env | 必须 | Hadoop集群部署 |
+| **配置文件** | stopwords.txt, user_dict.txt | 必须 | 文本处理配置 |
+| **文档** | README.md | 必须 | 项目说明文档 |

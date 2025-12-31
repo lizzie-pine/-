@@ -1,0 +1,274 @@
+=== 刷新任务开始 2025-12-31 02:19:51 ===
+容器: namenode
+项目目录: D:\2025-2026大数据\docker-hadoop\docker-hadoop\docker-hadoop-master
+[1] 检查 Docker 容器状态...
+容器运行中
+[2] 检查 Hadoop 服务...
+mesg: ttyname failed: Inappropriate ioctl for device
+Hadoop 3.2.1
+[3] 初始化容器临时目录...
+mesg: ttyname failed: Inappropriate ioctl for device
+drwxrwxrwt 89 root root 12288 Dec 30 18:10 /hadoop_tmp
+drwxrwxrwt  1 root root  4096 Dec 30 18:11 /tmp
+
+[4] 抓取微博热搜...
+ץȡ΢ʵʱ...
+ץȡɹѱ 50  -> D:\2025-2026\docker-hadoop\docker-hadoop\docker-hadoop-master\news_raw.txt
+ʷѱ -> D:\2025-2026\docker-hadoop\docker-hadoop\docker-hadoop-master\history\news_raw_2025-12-31_02.txt
+JSONѱ -> D:\2025-2026\docker-hadoop\docker-hadoop\docker-hadoop-master\history\news_raw_2025-12-31_02.json
+ʱ䣺 2025-12-31 02:19:55
+
+原始数据已保存到HDFS: /weibo_data/raw/2025-12-31_02-19-55/news_raw.txt
+[5] 中文分词处理...
+Building prefix dict from the default dictionary ...
+Loading model from cache C:\Users\Dell\AppData\Local\Temp\jieba.cache
+Loading model cost 0.499 seconds.
+Prefix dict has been built successfully.
+ִɣ 46  -> D:\2025-2026\docker-hadoop\docker-hadoop\docker-hadoop-master\news_seg.txt
+
+[6] 检查容器 Python 环境...
+使用 Python: python3
+[7] 拷贝文件到容器...
+
+
+
+[8] HDFS 准备...
+2025-12-30 18:20:04,454 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+
+[9] Hadoop Streaming 计算...
+2025-12-30 18:20:06,268 INFO impl.MetricsConfig: Loaded properties from hadoop-metrics2.properties
+2025-12-30 18:20:06,323 INFO impl.MetricsSystemImpl: Scheduled Metric snapshot period at 10 second(s).
+2025-12-30 18:20:06,323 INFO impl.MetricsSystemImpl: JobTracker metrics system started
+2025-12-30 18:20:06,336 WARN impl.MetricsSystemImpl: JobTracker metrics system already initialized!
+2025-12-30 18:20:06,528 INFO mapred.FileInputFormat: Total input files to process : 1
+2025-12-30 18:20:06,563 INFO mapreduce.JobSubmitter: number of splits:1
+2025-12-30 18:20:06,657 INFO mapreduce.JobSubmitter: Submitting tokens for job: job_local39794636_0001
+2025-12-30 18:20:06,657 INFO mapreduce.JobSubmitter: Executing with tokens: []
+2025-12-30 18:20:06,764 INFO mapred.LocalDistributedCacheManager: Localized file:/mapper.py as file:/hadoop_tmp/job_local39794636_0001_ce4a43fa-4597-4659-9fb4-4e1cf1114978/mapper.py
+2025-12-30 18:20:06,775 INFO mapred.LocalDistributedCacheManager: Localized file:/reducer.py as file:/hadoop_tmp/job_local39794636_0001_86d22732-7dca-405d-9815-e2707a8c19a1/reducer.py
+2025-12-30 18:20:06,809 INFO mapreduce.Job: The url to track the job: http://localhost:8080/
+2025-12-30 18:20:06,810 INFO mapreduce.Job: Running job: job_local39794636_0001
+2025-12-30 18:20:06,810 INFO mapred.LocalJobRunner: OutputCommitter set in config null
+2025-12-30 18:20:06,811 INFO mapred.LocalJobRunner: OutputCommitter is org.apache.hadoop.mapred.FileOutputCommitter
+2025-12-30 18:20:06,815 INFO output.FileOutputCommitter: File Output Committer Algorithm version is 2
+2025-12-30 18:20:06,815 INFO output.FileOutputCommitter: FileOutputCommitter skip cleanup _temporary folders under output directory:false, ignore cleanup failures: false
+2025-12-30 18:20:06,846 INFO mapred.LocalJobRunner: Waiting for map tasks
+2025-12-30 18:20:06,848 INFO mapred.LocalJobRunner: Starting task: attempt_local39794636_0001_m_000000_0
+2025-12-30 18:20:06,870 INFO output.FileOutputCommitter: File Output Committer Algorithm version is 2
+2025-12-30 18:20:06,871 INFO output.FileOutputCommitter: FileOutputCommitter skip cleanup _temporary folders under output directory:false, ignore cleanup failures: false
+2025-12-30 18:20:06,885 INFO mapred.Task:  Using ResourceCalculatorProcessTree : [ ]
+2025-12-30 18:20:06,892 INFO mapred.MapTask: Processing split: hdfs://namenode:9000/input/news_seg.txt:0+1568
+2025-12-30 18:20:06,914 INFO mapred.MapTask: numReduceTasks: 1
+2025-12-30 18:20:07,015 INFO mapred.MapTask: (EQUATOR) 0 kvi 26214396(104857584)
+2025-12-30 18:20:07,016 INFO mapred.MapTask: mapreduce.task.io.sort.mb: 100
+2025-12-30 18:20:07,016 INFO mapred.MapTask: soft limit at 83886080
+2025-12-30 18:20:07,016 INFO mapred.MapTask: bufstart = 0; bufvoid = 104857600
+2025-12-30 18:20:07,016 INFO mapred.MapTask: kvstart = 26214396; length = 6553600
+2025-12-30 18:20:07,018 INFO mapred.MapTask: Map output collector class = org.apache.hadoop.mapred.MapTask$MapOutputBuffer
+2025-12-30 18:20:07,023 INFO streaming.PipeMapRed: PipeMapRed exec [/usr/bin/python3, mapper.py]
+2025-12-30 18:20:07,027 INFO Configuration.deprecation: mapred.work.output.dir is deprecated. Instead, use mapreduce.task.output.dir
+2025-12-30 18:20:07,027 INFO Configuration.deprecation: map.input.start is deprecated. Instead, use mapreduce.map.input.start
+2025-12-30 18:20:07,027 INFO Configuration.deprecation: mapred.task.is.map is deprecated. Instead, use mapreduce.task.ismap
+2025-12-30 18:20:07,027 INFO Configuration.deprecation: mapred.task.id is deprecated. Instead, use mapreduce.task.attempt.id
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: mapred.tip.id is deprecated. Instead, use mapreduce.task.id
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: mapred.local.dir is deprecated. Instead, use mapreduce.cluster.local.dir
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: map.input.file is deprecated. Instead, use mapreduce.map.input.file
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: mapred.skip.on is deprecated. Instead, use mapreduce.job.skiprecords
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: map.input.length is deprecated. Instead, use mapreduce.map.input.length
+2025-12-30 18:20:07,028 INFO Configuration.deprecation: mapred.job.id is deprecated. Instead, use mapreduce.job.id
+2025-12-30 18:20:07,029 INFO Configuration.deprecation: user.name is deprecated. Instead, use mapreduce.job.user.name
+2025-12-30 18:20:07,029 INFO Configuration.deprecation: mapred.task.partition is deprecated. Instead, use mapreduce.task.partition
+2025-12-30 18:20:07,048 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+2025-12-30 18:20:07,099 INFO streaming.PipeMapRed: R/W/S=1/0/0 in:NA [rec/s] out:NA [rec/s]
+2025-12-30 18:20:07,100 INFO streaming.PipeMapRed: R/W/S=10/0/0 in:NA [rec/s] out:NA [rec/s]
+2025-12-30 18:20:07,103 INFO streaming.PipeMapRed: Records R/W=46/1
+2025-12-30 18:20:07,104 INFO streaming.PipeMapRed: MRErrorThread done
+2025-12-30 18:20:07,106 INFO streaming.PipeMapRed: mapRedFinished
+2025-12-30 18:20:07,108 INFO mapred.LocalJobRunner: 
+2025-12-30 18:20:07,108 INFO mapred.MapTask: Starting flush of map output
+2025-12-30 18:20:07,108 INFO mapred.MapTask: Spilling map output
+2025-12-30 18:20:07,108 INFO mapred.MapTask: bufstart = 0; bufend = 1729; bufvoid = 104857600
+2025-12-30 18:20:07,108 INFO mapred.MapTask: kvstart = 26214396(104857584); kvend = 26213816(104855264); length = 581/6553600
+2025-12-30 18:20:07,118 INFO zlib.ZlibFactory: Successfully loaded & initialized native-zlib library
+2025-12-30 18:20:07,118 INFO compress.CodecPool: Got brand-new compressor [.deflate]
+2025-12-30 18:20:07,127 INFO mapred.MapTask: Finished spill 0
+2025-12-30 18:20:07,150 INFO mapred.Task: Task:attempt_local39794636_0001_m_000000_0 is done. And is in the process of committing
+2025-12-30 18:20:07,154 INFO mapred.LocalJobRunner: Records R/W=46/1
+2025-12-30 18:20:07,155 INFO mapred.Task: Task 'attempt_local39794636_0001_m_000000_0' done.
+2025-12-30 18:20:07,161 INFO mapred.Task: Final Counters for attempt_local39794636_0001_m_000000_0: Counters: 23
+	File System Counters
+		FILE: Number of bytes read=181034
+		FILE: Number of bytes written=715758
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=1568
+		HDFS: Number of bytes written=0
+		HDFS: Number of read operations=5
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=1
+		HDFS: Number of bytes read erasure-coded=0
+	Map-Reduce Framework
+		Map input records=46
+		Map output records=146
+		Map output bytes=1729
+		Map output materialized bytes=1119
+		Input split bytes=91
+		Combine input records=0
+		Spilled Records=146
+		Failed Shuffles=0
+		Merged Map outputs=0
+		GC time elapsed (ms)=10
+		Total committed heap usage (bytes)=413138944
+	File Input Format Counters 
+		Bytes Read=1568
+2025-12-30 18:20:07,162 INFO mapred.LocalJobRunner: Finishing task: attempt_local39794636_0001_m_000000_0
+2025-12-30 18:20:07,162 INFO mapred.LocalJobRunner: map task executor complete.
+2025-12-30 18:20:07,164 INFO mapred.LocalJobRunner: Waiting for reduce tasks
+2025-12-30 18:20:07,165 INFO mapred.LocalJobRunner: Starting task: attempt_local39794636_0001_r_000000_0
+2025-12-30 18:20:07,171 INFO output.FileOutputCommitter: File Output Committer Algorithm version is 2
+2025-12-30 18:20:07,171 INFO output.FileOutputCommitter: FileOutputCommitter skip cleanup _temporary folders under output directory:false, ignore cleanup failures: false
+2025-12-30 18:20:07,172 INFO mapred.Task:  Using ResourceCalculatorProcessTree : [ ]
+2025-12-30 18:20:07,174 INFO mapred.ReduceTask: Using ShuffleConsumerPlugin: org.apache.hadoop.mapreduce.task.reduce.Shuffle@5dc15106
+2025-12-30 18:20:07,175 WARN impl.MetricsSystemImpl: JobTracker metrics system already initialized!
+2025-12-30 18:20:07,188 INFO reduce.MergeManagerImpl: MergerManager: memoryLimit=2583691264, maxSingleShuffleLimit=645922816, mergeThreshold=1705236352, ioSortFactor=10, memToMemMergeOutputsThreshold=10
+2025-12-30 18:20:07,190 INFO reduce.EventFetcher: attempt_local39794636_0001_r_000000_0 Thread started: EventFetcher for fetching Map Completion Events
+2025-12-30 18:20:07,207 INFO compress.CodecPool: Got brand-new decompressor [.deflate]
+2025-12-30 18:20:07,207 INFO reduce.LocalFetcher: localfetcher#1 about to shuffle output of map attempt_local39794636_0001_m_000000_0 decomp: 2023 len: 1119 to MEMORY
+2025-12-30 18:20:07,211 INFO reduce.InMemoryMapOutput: Read 2023 bytes from map-output for attempt_local39794636_0001_m_000000_0
+2025-12-30 18:20:07,211 INFO reduce.MergeManagerImpl: closeInMemoryFile -> map-output of size: 2023, inMemoryMapOutputs.size() -> 1, commitMemory -> 0, usedMemory ->2023
+2025-12-30 18:20:07,213 INFO reduce.EventFetcher: EventFetcher is interrupted.. Returning
+2025-12-30 18:20:07,214 INFO mapred.LocalJobRunner: 1 / 1 copied.
+2025-12-30 18:20:07,214 INFO reduce.MergeManagerImpl: finalMerge called with 1 in-memory map-outputs and 0 on-disk map-outputs
+2025-12-30 18:20:07,220 INFO mapred.Merger: Merging 1 sorted segments
+2025-12-30 18:20:07,220 INFO mapred.Merger: Down to the last merge-pass, with 1 segments left of total size: 2018 bytes
+2025-12-30 18:20:07,222 INFO reduce.MergeManagerImpl: Merged 1 segments, 2023 bytes to disk to satisfy reduce memory limit
+2025-12-30 18:20:07,223 INFO reduce.MergeManagerImpl: Merging 1 files, 1127 bytes from disk
+2025-12-30 18:20:07,223 INFO reduce.MergeManagerImpl: Merging 0 segments, 0 bytes from memory into reduce
+2025-12-30 18:20:07,223 INFO mapred.Merger: Merging 1 sorted segments
+2025-12-30 18:20:07,224 INFO mapred.Merger: Down to the last merge-pass, with 1 segments left of total size: 2018 bytes
+2025-12-30 18:20:07,225 INFO mapred.LocalJobRunner: 1 / 1 copied.
+2025-12-30 18:20:07,229 INFO streaming.PipeMapRed: PipeMapRed exec [/usr/bin/python3, reducer.py]
+2025-12-30 18:20:07,230 INFO Configuration.deprecation: mapred.job.tracker is deprecated. Instead, use mapreduce.jobtracker.address
+2025-12-30 18:20:07,231 INFO Configuration.deprecation: mapred.map.tasks is deprecated. Instead, use mapreduce.job.maps
+2025-12-30 18:20:07,270 INFO streaming.PipeMapRed: R/W/S=1/0/0 in:NA [rec/s] out:NA [rec/s]
+2025-12-30 18:20:07,271 INFO streaming.PipeMapRed: R/W/S=10/0/0 in:NA [rec/s] out:NA [rec/s]
+2025-12-30 18:20:07,272 INFO streaming.PipeMapRed: R/W/S=100/0/0 in:NA [rec/s] out:NA [rec/s]
+2025-12-30 18:20:07,275 INFO streaming.PipeMapRed: Records R/W=146/1
+2025-12-30 18:20:07,276 INFO streaming.PipeMapRed: MRErrorThread done
+2025-12-30 18:20:07,277 INFO streaming.PipeMapRed: mapRedFinished
+2025-12-30 18:20:07,296 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+2025-12-30 18:20:07,318 INFO mapred.Task: Task:attempt_local39794636_0001_r_000000_0 is done. And is in the process of committing
+2025-12-30 18:20:07,320 INFO mapred.LocalJobRunner: 1 / 1 copied.
+2025-12-30 18:20:07,320 INFO mapred.Task: Task attempt_local39794636_0001_r_000000_0 is allowed to commit now
+2025-12-30 18:20:07,338 INFO output.FileOutputCommitter: Saved output of task 'attempt_local39794636_0001_r_000000_0' to hdfs://namenode:9000/output/result
+2025-12-30 18:20:07,339 INFO mapred.LocalJobRunner: Records R/W=146/1 > reduce
+2025-12-30 18:20:07,339 INFO mapred.Task: Task 'attempt_local39794636_0001_r_000000_0' done.
+2025-12-30 18:20:07,339 INFO mapred.Task: Final Counters for attempt_local39794636_0001_r_000000_0: Counters: 30
+	File System Counters
+		FILE: Number of bytes read=183312
+		FILE: Number of bytes written=716885
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=1568
+		HDFS: Number of bytes written=1227
+		HDFS: Number of read operations=10
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=3
+		HDFS: Number of bytes read erasure-coded=0
+	Map-Reduce Framework
+		Combine input records=0
+		Combine output records=0
+		Reduce input groups=146
+		Reduce shuffle bytes=1119
+		Reduce input records=146
+		Reduce output records=98
+		Spilled Records=146
+		Shuffled Maps =1
+		Failed Shuffles=0
+		Merged Map outputs=1
+		GC time elapsed (ms)=0
+		Total committed heap usage (bytes)=413138944
+	Shuffle Errors
+		BAD_ID=0
+		CONNECTION=0
+		IO_ERROR=0
+		WRONG_LENGTH=0
+		WRONG_MAP=0
+		WRONG_REDUCE=0
+	File Output Format Counters 
+		Bytes Written=1227
+2025-12-30 18:20:07,339 INFO mapred.LocalJobRunner: Finishing task: attempt_local39794636_0001_r_000000_0
+2025-12-30 18:20:07,339 INFO mapred.LocalJobRunner: reduce task executor complete.
+2025-12-30 18:20:07,827 INFO mapreduce.Job: Job job_local39794636_0001 running in uber mode : false
+2025-12-30 18:20:07,828 INFO mapreduce.Job:  map 100% reduce 100%
+2025-12-30 18:20:07,830 INFO mapreduce.Job: Job job_local39794636_0001 completed successfully
+2025-12-30 18:20:07,836 INFO mapreduce.Job: Counters: 36
+	File System Counters
+		FILE: Number of bytes read=364346
+		FILE: Number of bytes written=1432643
+		FILE: Number of read operations=0
+		FILE: Number of large read operations=0
+		FILE: Number of write operations=0
+		HDFS: Number of bytes read=3136
+		HDFS: Number of bytes written=1227
+		HDFS: Number of read operations=15
+		HDFS: Number of large read operations=0
+		HDFS: Number of write operations=4
+		HDFS: Number of bytes read erasure-coded=0
+	Map-Reduce Framework
+		Map input records=46
+		Map output records=146
+		Map output bytes=1729
+		Map output materialized bytes=1119
+		Input split bytes=91
+		Combine input records=0
+		Combine output records=0
+		Reduce input groups=146
+		Reduce shuffle bytes=1119
+		Reduce input records=146
+		Reduce output records=98
+		Spilled Records=292
+		Shuffled Maps =1
+		Failed Shuffles=0
+		Merged Map outputs=1
+		GC time elapsed (ms)=10
+		Total committed heap usage (bytes)=826277888
+	Shuffle Errors
+		BAD_ID=0
+		CONNECTION=0
+		IO_ERROR=0
+		WRONG_LENGTH=0
+		WRONG_MAP=0
+		WRONG_REDUCE=0
+	File Input Format Counters 
+		Bytes Read=1568
+	File Output Format Counters 
+		Bytes Written=1227
+2025-12-30 18:20:07,836 INFO streaming.StreamJob: Output directory: /output/result
+
+[10] 获取计算结果...
+2025-12-30 18:20:09,755 INFO sasl.SaslDataTransferClient: SASL encryption trust check: localHostTrusted = false, remoteHostTrusted = false
+
+
+处理结果已保存到HDFS: /weibo_data/result/2025-12-31_02-19-55/top20.txt
+[11] 计算热搜词共现关系...
+2025-12-30 18:20:15,983 INFO impl.MetricsConfig: Loaded properties from hadoop-metrics2.properties
+2025-12-30 18:20:16,038 INFO impl.MetricsSystemImpl: Scheduled Metric snapshot period at 10 second(s).
+2025-12-30 18:20:16,038 INFO impl.MetricsSystemImpl: JobTracker metrics system started
+2025-12-30 18:20:16,053 WARN impl.MetricsSystemImpl: JobTracker metrics system already initialized!
+2025-12-30 18:20:16,163 ERROR streaming.StreamJob: Error Launching job : Output directory hdfs://namenode:9000/output/cooccurrence already exists
+Streaming Command Failed!
+
+共现关系已保存到HDFS: /weibo_data/result/2025-12-31_02-19-55/cooccurrence.txt
+[12] 统计时段热搜分布...
+2025-12-30 18:20:23,681 INFO impl.MetricsConfig: Loaded properties from hadoop-metrics2.properties
+2025-12-30 18:20:23,720 INFO impl.MetricsSystemImpl: Scheduled Metric snapshot period at 10 second(s).
+2025-12-30 18:20:23,720 INFO impl.MetricsSystemImpl: JobTracker metrics system started
+2025-12-30 18:20:23,734 WARN impl.MetricsSystemImpl: JobTracker metrics system already initialized!
+2025-12-30 18:20:23,831 ERROR streaming.StreamJob: Error Launching job : Output directory hdfs://namenode:9000/output/time_dist already exists
+Streaming Command Failed!
+
+时段分布已保存到HDFS: /weibo_data/result/2025-12-31_02-19-55/time_dist.txt
+=== 刷新完成 2025-12-31 02:20:29 ===
